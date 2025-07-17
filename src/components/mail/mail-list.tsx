@@ -94,8 +94,8 @@ export function MailList({
     l = Math.max(0, l - amount);
     return `hsl(${h}, ${s}%, ${l}%)`;
   }
-  const getAvatarProps = (name: string) => {
-    const bgColor = useMemo(() => generateAvatarColor(name), [name]);
+   const getAvatarProps = React.useMemo(() => (name: string) => {
+    const bgColor = generateAvatarColor(name);
     const textColor = darkenHslColor(bgColor, 50);
     return {
       style: {
@@ -104,7 +104,8 @@ export function MailList({
       },
       children: name.charAt(0).toUpperCase(),
     };
-  };
+  }, []); // Empty dependency to ensure it's memoized
+
 
   return (
     <>
