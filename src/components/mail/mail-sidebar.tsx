@@ -131,6 +131,7 @@ export function MailSidebar({
               }`}
             >
               <Send className="h-4 w-4" />
+              <span>CI CD Test ...</span>
               <span>Sent</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
