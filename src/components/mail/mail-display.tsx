@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Search } from "lucide-react";
-
+import { Cross, Search, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { Mail } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ export function MailDisplay({ mails, selectedFolder }: MailDisplayProps) {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const { selected, setSelected } = useMail();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [userLetter, setUserLetter] = React.useState("U");
+  const router = useRouter();
 
   const handleSelectMail = (mailId: string) => {
     setSelected(mailId);
@@ -56,33 +58,63 @@ export function MailDisplay({ mails, selectedFolder }: MailDisplayProps) {
 
   console.log("selectedFolder : ", selectedFolder);
 
+  const handleLogOut = () => {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("email");
+    localStorage.removeItem("password");
+
+    router.push("/login");
+  };
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const email = localStorage.getItem("email");
+      if (email) {
+        setUserLetter(email.charAt(0).toUpperCase());
+      }
+    }
+  }, []);
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center p-2">
         <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="relative pr-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search"
-              className="pl-8"
+              placeholder="Search emails..."
+              className="pl-10 pr-4 py-5 rounded-xl border-border/50 hover:border-primary/30 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={(e) => e.target.select()}
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus:outline-none"
+                aria-label="Clear search"
+              >
+                <Cross className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8" size="icon">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="https://placehold.co/32x32.png" alt="User" />
-                <AvatarFallback>U</AvatarFallback>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 rounded-full"
+              size="icon"
+            >
+              <Avatar className="h-8 w-8 border">
+                <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                  {userLetter || "U"}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogOut}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
