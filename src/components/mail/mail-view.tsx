@@ -119,6 +119,9 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
     replyTo = sender.replace(/"/g, "");
   }
 
+  // Check if the replyTo is the same as the sender, if so don't display it twice
+  const finalReplyTo = replyTo === sender ? "" : replyTo;
+
   let replyToAddress = "";
   if (mail.from) {
     // Extract text within <...>
@@ -652,7 +655,6 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
             </TooltipProvider>
           </div>
           <Separator orientation="vertical" className="mx-2 h-6" />
-          
         </div>
         <Separator />
         <div className="flex flex-1 flex-col">
@@ -687,18 +689,22 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
                   {mail.subject}
                 </div>
 
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1 bg-muted/30 px-1.5 py-0.5 rounded-full">
-                    <ReplyIcon className="h-3 w-3" />
-                    <span className="truncate max-w-[180px]">{replyTo}</span>
-                  </span>
-
-                  {mail.date && (
-                    <span className="md:hidden text-xs text-muted-foreground whitespace-nowrap">
-                      {formatTime(mail.date)}
+                {finalReplyTo && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 bg-muted/30 px-1.5 py-0.5 rounded-full">
+                      <ReplyIcon className="h-3 w-3" />
+                      <span className="truncate max-w-[180px]">
+                        {finalReplyTo}
+                      </span>
                     </span>
-                  )}
-                </div>
+
+                    {mail.date && (
+                      <span className="md:hidden text-xs text-muted-foreground whitespace-nowrap">
+                        {formatTime(mail.date)}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -840,7 +846,6 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
         </div>
       )}
 
- 
       {/* Forward mail modal */}
       {showForwardModal && (
         <div className="fixed inset-0 z-50">
