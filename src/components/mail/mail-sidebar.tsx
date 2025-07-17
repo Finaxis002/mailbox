@@ -59,6 +59,8 @@ export function MailSidebar({
     }
   };
 
+  console.log("folderCounts.inbox : ", folderCounts.inbox);
+
   return (
     <>
       <SidebarHeader>
@@ -104,21 +106,6 @@ export function MailSidebar({
               )}
             </SidebarMenuButton>
           </SidebarMenuItem>
-
-          {/* <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={selectedFolder === "starred"}
-              onClick={() => handleFolderClick("starred")}
-              className={`flex items-center gap-3 px-4 py-2.5 text-sm rounded-r-full transition-all ${
-                selectedFolder === "starred"
-                  ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium border-l-4 border-blue-600"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <Star className="h-4 w-4" />
-              <span>Starred</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem> */}
 
           <SidebarMenuItem>
             <SidebarMenuButton

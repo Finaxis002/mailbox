@@ -63,6 +63,38 @@ function SubmitButton() {
   );
 }
 
+// Place these functions at the top of your MailView file (or import if shared)
+function generateAvatarColor(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  const s = 70 + (Math.abs(hash) % 15);
+  const l = 60 + (Math.abs(hash) % 15);
+  return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
+function getAvatarProps(name: string) {
+  const bgColor = generateAvatarColor(name);
+  const lightness = parseInt(bgColor.split(",")[2].replace("%)", ""));
+  const textColor = lightness < 70 ? "#ffffff" : "#000000";
+  return {
+    style: {
+      backgroundColor: bgColor,
+      color: textColor,
+    },
+    children: name.charAt(0).toUpperCase(),
+  };
+}
+
+function htmlToPlainText(html: string) {
+  // Remove all tags
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+}
+
 export function MailView({ mail, currentFolder }: MailViewProps) {
   const [state, formAction] = useActionState(checkEmailPriority, initialState);
   const [showReplyModal, setShowReplyModal] = React.useState(false);
@@ -210,8 +242,11 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
       `\n\n---------- Forwarded message ----------\n` +
         `From: ${mail.from}\nDate: ${
           mail.date ? new Date(mail.date).toLocaleString() : ""
-        }\nSubject: ${mail.subject}\n\n${mail.text || mail.body || ""}`
+        }\nSubject: ${mail.subject}\n\n${
+          mail.text ? mail.text : mail.body ? htmlToPlainText(mail.body) : ""
+        }`
     );
+
     setShowForwardModal(true);
   };
 
@@ -617,20 +652,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
             </TooltipProvider>
           </div>
           <Separator orientation="vertical" className="mx-2 h-6" />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">More</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-              <DropdownMenuItem>Star thread</DropdownMenuItem>
-              <DropdownMenuItem>Add label</DropdownMenuItem>
-              <DropdownMenuItem>Mute thread</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          
         </div>
         <Separator />
         <div className="flex flex-1 flex-col">
@@ -640,11 +662,11 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
             <div className="flex items-start gap-3 flex-1 min-w-0">
               <div className="flex-shrink-0 mt-0.5">
                 <Avatar className="h-10 w-10 border-2 border-background group-hover:border-primary/20 transition-colors">
-                  <AvatarFallback className="text-sm font-medium bg-gradient-to-br from-primary/10 to-muted/50">
-                    {displayName
-                      .split(" ")
-                      .map((chunk: any[]) => chunk[0])
-                      .join("")}
+                  <AvatarFallback
+                    className="text-sm font-medium bg-gradient-to-br from-primary/10 to-muted/50"
+                    style={getAvatarProps(displayName).style} // <- ADD THIS
+                  >
+                    {getAvatarProps(displayName).children}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -818,21 +840,21 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
         </div>
       )}
 
-      {/* forward mail model  */}
+ 
+      {/* Forward mail modal */}
       {showForwardModal && (
         <div className="fixed inset-0 z-50">
           {/* Overlay with fade-in animation */}
           <div
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300"
+            className="fixed inset-0 transition-opacity duration-300"
             onClick={() => setShowForwardModal(false)}
           />
-
-          {/* Modal with slide-up animation */}
-          <div className="fixed inset-0 flex items-end justify-center sm:items-center sm:p-4 transform transition-all duration-300 ease-in-out">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md border border-gray-200 sm:rounded-lg">
+          {/* Modal sliding up from bottom-right (mobile) */}
+          <div className="fixed bottom-4 right-4 w-full max-w-md transform transition-all duration-300 ease-in-out">
+            <div className="bg-white rounded-t-lg shadow-2xl overflow-hidden border border-gray-200">
               {/* Header */}
-              <div className="flex justify-between items-center px-6 py-4 border-b">
-                <h2 className="text-xl font-semibold text-gray-800">
+              <div className="flex justify-between items-center bg-gray-50 px-4 py-3 border-b">
+                <h2 className="text-lg font-medium text-gray-800">
                   Forward Message
                 </h2>
                 <button
@@ -855,13 +877,13 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-4">
-                <div>
+              <div className="p-4">
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     To
                   </label>
                   <input
-                    className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Enter email addresses (comma separated)"
                     value={forwardTo}
                     onChange={(e) => setForwardTo(e.target.value)}
@@ -871,25 +893,23 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
                     Separate multiple addresses with commas
                   </p>
                 </div>
-
-                <div>
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Subject
                   </label>
                   <input
-                    className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Subject"
                     value={forwardSubject}
                     onChange={(e) => setForwardSubject(e.target.value)}
                   />
                 </div>
-
-                <div>
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Message
                   </label>
                   <textarea
-                    className="w-full h-40 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                    className="w-full h-40 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                     value={forwardBody}
                     onChange={(e) => setForwardBody(e.target.value)}
                     placeholder="Add any additional message..."
@@ -898,20 +918,18 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+              <div className="bg-gray-50 px-4 py-3 border-t flex justify-end gap-2">
                 <button
                   onClick={() => setShowForwardModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSendForward}
                   disabled={!forwardTo.trim()}
-                  className={`px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
-                    !forwardTo.trim()
-                      ? "bg-blue-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
+                  className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
+                    !forwardTo.trim() ? "opacity-60 cursor-not-allowed" : ""
                   }`}
                 >
                   Forward

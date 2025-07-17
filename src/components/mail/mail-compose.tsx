@@ -152,7 +152,7 @@ export function MailCompose() {
               <Button
                 variant="default"
                 className={cn(
-                  "w-full transition-all duration-300 hover:shadow-md",
+                  "w-full p-2 transition-all duration-300 hover:shadow-md",
                   isCollapsed && "h-9 w-9 shrink-0 p-0 ml-[-3vh]"
                 )}
               >

@@ -6,8 +6,7 @@ import type { Mail } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Star } from "lucide-react";
+import { isToday, isYesterday, format } from "date-fns";
 import DOMPurify from "dompurify";
 
 interface MailListProps {
@@ -82,13 +81,19 @@ export function MailList({
     return `hsl(${h}, ${s}%, ${l}%)`;
   };
 
+  function darkenHslColor(hsl: string, amount: number = 25) {
+    const match = hsl.match(/^hsl\((\d+),\s*(\d+)%?,\s*(\d+)%?\)$/);
+    if (!match) return "#222";
+    // TypeScript: string[], so assign then cast
+    let h = Number(match[1]);
+    let s = Number(match[2]);
+    let l = Number(match[3]);
+    l = Math.max(0, l - amount);
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  }
   const getAvatarProps = (name: string) => {
     const bgColor = generateAvatarColor(name);
-
-    // Calculate text color based on lightness
-    const lightness = parseInt(bgColor.split(",")[2].replace("%)", ""));
-    const textColor = lightness < 70 ? "#ffffff" : "#000000";
-
+    const textColor = darkenHslColor(bgColor, 50); // amount can be tuned
     return {
       style: {
         backgroundColor: bgColor,
@@ -97,6 +102,7 @@ export function MailList({
       children: name.charAt(0).toUpperCase(),
     };
   };
+
   return (
     // <ScrollArea>
     //   <div className="flex flex-col gap-2 p-4 pt-0">
@@ -213,14 +219,15 @@ export function MailList({
     // </ScrollArea>
 
     <ScrollArea className="h-[calc(100vh-64px)] rounded-lg">
-      <div className="space-y-1">
+      <div className="space-y-2 px-2 py-1">
         {items.map((item) => (
           <div
             key={item.uid}
             onClick={() => onSelectMail(item.uid)}
             className={`
-          relative p-4 pr-6 rounded-lg transition-all duration-200
+          relative p-4 pr-6 rounded-xl transition-all duration-200
           hover:shadow-sm cursor-pointer border
+          group
           ${
             !item.read
               ? "bg-white border-blue-100 hover:border-blue-200 dark:bg-gray-900 dark:border-blue-900/50"
@@ -229,8 +236,8 @@ export function MailList({
         `}
           >
             {/* Unread indicator */}
-            {!item.read && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l-lg" />
+            {!item.read && currentFolder === "inbox" && (
+              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 rounded-l-lg" />
             )}
 
             <div className="flex items-start gap-4">
@@ -238,8 +245,11 @@ export function MailList({
               <div
                 className={`
               flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center 
-              shadow-sm ${
-                !item.read ? "ring-1 ring-blue-200 dark:ring-blue-900" : ""
+              shadow-sm transition-transform group-hover:scale-105
+              ${
+                !item.read
+                  ? "ring-2 ring-blue-200 dark:ring-blue-900/80"
+                  : "ring-1 ring-gray-100 dark:ring-gray-800"
               }
             `}
                 style={getAvatarProps(extractDisplayName(item.from)).style}
@@ -252,13 +262,13 @@ export function MailList({
                   <div className="flex items-center gap-2">
                     <p
                       className={`
-                  text-sm font-medium truncate
-                  ${
-                    !item.read
-                      ? "text-gray-900 font-semibold dark:text-white"
-                      : "text-gray-600 dark:text-gray-400"
-                  }
-                `}
+                    text-sm font-medium truncate
+                    ${
+                      !item.read
+                        ? "text-gray-900 font-semibold dark:text-white"
+                        : "text-gray-600 dark:text-gray-400"
+                    }
+                  `}
                     >
                       {extractDisplayName(item.from)}
                     </p>
@@ -266,42 +276,40 @@ export function MailList({
 
                   <div
                     className={`
-                text-xs whitespace-nowrap
-                ${
-                  !item.read
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-gray-400 dark:text-gray-500"
-                }
-              `}
+                  text-xs whitespace-nowrap
+                  ${
+                    !item.read
+                      ? "text-blue-600 dark:text-blue-400 font-medium"
+                      : "text-gray-400 dark:text-gray-500"
+                  }
+                `}
                   >
-                    {formatDistanceToNow(new Date(item.date), {
-                      addSuffix: true,
-                    })}
+                    {format(new Date(item.date), "EEE HH:mm")}
                   </div>
                 </div>
 
                 <h3
                   className={`
-              mt-1 text-sm truncate
-              ${
-                !item.read
-                  ? "text-gray-900 font-medium dark:text-white"
-                  : "text-gray-700 dark:text-gray-300"
-              }
-            `}
+                mt-1 text-sm truncate
+                ${
+                  !item.read
+                    ? "text-gray-900 font-medium dark:text-white"
+                    : "text-gray-700 dark:text-gray-300"
+                }
+              `}
                 >
                   {item.subject}
                 </h3>
 
                 <p
                   className={`
-              mt-1.5 text-sm line-clamp-2
-              ${
-                !item.read
-                  ? "text-gray-600 dark:text-gray-300"
-                  : "text-gray-500 dark:text-gray-500"
-              }
-            `}
+                mt-1.5 text-sm line-clamp-2
+                ${
+                  !item.read
+                    ? "text-gray-600 dark:text-gray-300"
+                    : "text-gray-500 dark:text-gray-500"
+                }
+              `}
                 >
                   {item.text
                     ? htmlToText(item.text).substring(0, 300)
@@ -317,10 +325,11 @@ export function MailList({
                         key={label}
                         className={`
                       px-2 py-0.5 text-xs font-medium rounded-full
+                      transition-colors duration-150
                       ${
                         !item.read
-                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                          : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                          ? "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                       }
                     `}
                       >
