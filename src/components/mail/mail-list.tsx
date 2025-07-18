@@ -18,6 +18,8 @@ interface MailListProps {
   currentFolder: string; // Folder from which the mails are fetched
 }
 
+
+
 export function MailList({
   items,
   onSelectMail,
@@ -99,6 +101,9 @@ export function MailList({
     },
     []
   ); // Empty dependency to ensure it's memoized
+
+
+
 
   return (
     <>

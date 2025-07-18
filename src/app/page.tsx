@@ -14,7 +14,8 @@ export default function Home() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [folder, setFolder] = useState("inbox");
-  const [mails, setMails] = useState([]);
+  const [mails, setMails] = useState<Mail[]>([]);
+
   const [loading, setLoading] = useState(false);
 
   const [folderCounts, setFolderCounts] = useState({
@@ -155,7 +156,11 @@ export default function Home() {
         <MailSidebar onFolderSelect={setFolder} folderCounts={folderCounts} />
       </Sidebar>
       <SidebarInset>
-        <MailDisplay mails={mails} selectedFolder={folder} />
+        <MailDisplay
+          mails={mails}
+          setMails={setMails}
+          selectedFolder={folder}
+        />
       </SidebarInset>
     </SidebarProvider>
   );

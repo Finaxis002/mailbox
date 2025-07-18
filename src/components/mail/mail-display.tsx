@@ -23,17 +23,59 @@ import { MailView } from "./mail-view";
 
 interface MailDisplayProps {
   mails: Mail[];
+  setMails: React.Dispatch<React.SetStateAction<Mail[]>>;
   selectedFolder: string;
 }
 
-export function MailDisplay({ mails, selectedFolder }: MailDisplayProps) {
+export function MailDisplay({
+  mails,
+  setMails,
+  selectedFolder,
+}: MailDisplayProps) {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const { selected, setSelected } = useMail();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [userLetter, setUserLetter] = React.useState("U");
   const router = useRouter();
 
-  const handleSelectMail = (mailId: string) => {
+  async function markMailAsRead(uid: string, email: string, password: string) {
+    const res = await fetch(
+      `https://taskbe.sharda.co.in/api/email/${uid}/mark-as-read`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      }
+    );
+    return res.json();
+  }
+
+  const handleSelectMail = async (mailId: string) => {
+    const mail = mails.find((m) => m.uid === mailId);
+
+    // Mark as read only if unread
+    if (mail && !mail.read) {
+      const email = localStorage.getItem("email");
+      const password = localStorage.getItem("password");
+
+      if (!email || !password) {
+        // handle missing credentials (logout, show error, etc)
+        console.error("Missing email or password in localStorage");
+        return;
+      }
+      try {
+        const result = await markMailAsRead(mailId, email, password);
+        console.log("Mark as read result:", result);
+
+        // Update local mails state to reflect the mail as read
+        setMails((prevMails) =>
+          prevMails.map((m) => (m.uid === mailId ? { ...m, read: true } : m))
+        );
+      } catch (err) {
+        console.error("Mark as read error:", err);
+      }
+    }
+
     setSelected(mailId);
     setIsSheetOpen(true);
   };
