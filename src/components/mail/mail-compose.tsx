@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { PenSquare } from "lucide-react";
+import { FileText, Loader2, Paperclip, PenSquare, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -22,15 +22,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useState } from "react";
+import { motion } from "framer-motion";
+
+type Attachment = { filename: string; content: string; encoding: string };
 
 export function MailCompose() {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const { state } = useSidebar();
   const [to, setTo] = React.useState("");
+  const [cc, setCc] = useState("");
+  const [bcc, setBcc] = useState("");
+  const [showCc, setShowCc] = useState(false);
+  const [showBcc, setShowBcc] = useState(false);
   const [subject, setSubject] = React.useState("");
   const [body, setBody] = React.useState("");
   const [loading, setLoading] = React.useState(false);
+
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   const isCollapsed = state === "collapsed";
 
@@ -38,6 +48,31 @@ export function MailCompose() {
     typeof window !== "undefined" ? localStorage.getItem("email") : "";
   const userPassword =
     typeof window !== "undefined" ? localStorage.getItem("password") : "";
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files) as File[];
+
+    Promise.all(
+      files.map((file) => {
+        return new Promise<{
+          filename: string;
+          content: string;
+          encoding: string;
+        }>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            resolve({
+              filename: file.name,
+              content: (ev.target?.result as string).split(",")[1], // remove data:*/*;base64,
+              encoding: "base64",
+            });
+          };
+          reader.readAsDataURL(file);
+        });
+      })
+    ).then(setAttachments);
+  };
 
   const handleSend = async () => {
     if (!to || !subject || !body) {
@@ -57,20 +92,26 @@ export function MailCompose() {
           from: userEmail,
           password: userPassword,
           to,
+          cc,
+          bcc,
           subject,
           text: body,
+          attachments, // <-- array of {filename, content, encoding}
         }),
       });
+
       const data = await res.json();
       if (data.success) {
         toast({
           title: "Email Sent!",
           description: "Your email has been successfully sent.",
         });
-        setOpen(false);
         setTo("");
+        setCc("");
+        setBcc("");
         setSubject("");
         setBody("");
+        setAttachments([]);
       } else {
         toast({
           title: "Failed to Send",
@@ -167,83 +208,254 @@ export function MailCompose() {
         </Tooltip>
       </TooltipProvider>
 
-      <SheetContent className="w-full sm:max-w-xl flex flex-col p-0 border-l border-gray-200 dark:border-gray-800">
-        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent dark:from-gray-900/5 pointer-events-none" />
+     
 
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+      <SheetContent className="w-full sm:max-w-2xl h-full flex flex-col p-0 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent dark:from-gray-900/10 pointer-events-none" />
+
+        {/* Header */}
+        <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center space-x-3">
-            <div className="bg-blue-500/10 p-2 rounded-lg">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
               <PenSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <SheetTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-                New Mail
+                Compose New Email
               </SheetTitle>
               <SheetDescription className="text-sm text-gray-500 dark:text-gray-400">
-                Write your email below
+                Write your message below
               </SheetDescription>
             </div>
           </div>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-          <div className="space-y-1">
-            <Label
-              htmlFor="to"
-              className="text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Recipient
-            </Label>
-            <Input
-              id="to"
-              placeholder="recipient@example.com"
-              className="border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              autoFocus
-            />
-          </div>
+        {/* Email form */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+          {/* Recipient row */}
+          <div className="space-y-4">
+            {/* To Field */}
+            <div className="group relative">
+              <div className="flex items-start">
+                <Label
+                  htmlFor="to"
+                  className="w-20 pt-3 text-sm font-medium text-gray-500 dark:text-gray-400 transition-all group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400"
+                >
+                  To:
+                </Label>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="to"
+                      placeholder="recipient@example.com"
+                      className="flex-1 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-3 px-4 rounded-lg bg-white dark:bg-gray-900 shadow-sm"
+                      value={to}
+                      onChange={(e) => setTo(e.target.value)}
+                      autoFocus
+                    />
+                    <div className="flex gap-1">
+                      {!showCc && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                          onClick={() => setShowCc(true)}
+                        >
+                          <span className="hidden sm:inline">Cc</span>
+                          <span className="sm:hidden">+Cc</span>
+                        </Button>
+                      )}
+                      {!showBcc && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                          onClick={() => setShowBcc(true)}
+                        >
+                          <span className="hidden sm:inline">Bcc</span>
+                          <span className="sm:hidden">+Bcc</span>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {/* Email chips could be added here for multiple recipients */}
+                </div>
+              </div>
+            </div>
 
+            {/* Cc Field - Animated */}
+            {showCc && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="group relative overflow-hidden"
+              >
+                <div className="flex items-start">
+                  <Label
+                    htmlFor="cc"
+                    className="w-20 pt-3 text-sm font-medium text-gray-500 dark:text-gray-400 transition-all group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400"
+                  >
+                    Cc:
+                  </Label>
+                  <div className="flex-1 flex items-center gap-2">
+                    <Input
+                      id="cc"
+                      placeholder="cc@example.com"
+                      className="flex-1 border-gray-300 dark:border-gray-700 py-3 px-4 rounded-lg bg-white dark:bg-gray-900 shadow-sm"
+                      value={cc}
+                      onChange={(e) => setCc(e.target.value)}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                      onClick={() => setShowCc(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Bcc Field - Animated */}
+            {showBcc && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="group relative overflow-hidden"
+              >
+                <div className="flex items-start">
+                  <Label
+                    htmlFor="bcc"
+                    className="w-20 pt-3 text-sm font-medium text-gray-500 dark:text-gray-400 transition-all group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400"
+                  >
+                    Bcc:
+                  </Label>
+                  <div className="flex-1 flex items-center gap-2">
+                    <Input
+                      id="bcc"
+                      placeholder="bcc@example.com"
+                      className="flex-1 border-gray-300 dark:border-gray-700 py-3 px-4 rounded-lg bg-white dark:bg-gray-900 shadow-sm"
+                      value={bcc}
+                      onChange={(e) => setBcc(e.target.value)}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                      onClick={() => setShowBcc(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+          {/* Subject */}
           <div className="space-y-1">
             <Label
               htmlFor="subject"
-              className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300"
             >
               Subject
             </Label>
             <Input
               id="subject"
-              placeholder="Your subject line"
-              className="border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="What's this email about?"
+              className="border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
             />
           </div>
 
+          {/* Attachments */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              Attachments
+            </Label>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Add Files Button */}
+              <label className="cursor-pointer">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 shadow-sm hover:bg-blue-50 dark:hover:bg-blue-900 border-blue-100 dark:border-blue-800"
+                  asChild
+                >
+                  <div>
+                    <Paperclip className="h-4 w-4 mr-1 text-blue-600 dark:text-blue-400" />
+                    <span className="font-medium">Add files</span>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                </Button>
+              </label>
+
+              {/* File Chips */}
+              {attachments.length > 0 &&
+                attachments.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center max-w-xs px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 rounded-full shadow-sm mr-2 mb-2 animate-in fade-in"
+                  >
+                    <FileText className="h-4 w-4 mr-1 text-blue-500 dark:text-blue-300" />
+                    <span className="truncate max-w-[120px] text-sm font-medium">
+                      { file.filename}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newAttachments = [...attachments];
+                        newAttachments.splice(index, 1);
+                        setAttachments(newAttachments);
+                      }}
+                      className="ml-2 text-blue-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-full focus:outline-none"
+                      aria-label="Remove file"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* Message body */}
           <div className="space-y-1 flex-1">
             <Label
               htmlFor="body"
-              className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300"
             >
               Message
             </Label>
             <Textarea
               id="body"
-              placeholder="Write your email content here..."
-              className="min-h-[300px] border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="Write your message here..."
+              className="min-h-[150px] border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={body}
               onChange={(e) => setBody(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="border-t border-gray-200 dark:border-gray-800 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
+        {/* Footer with actions */}
+        <div className="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
           <div className="flex justify-between items-center">
             <Button
               variant="ghost"
               onClick={() => setOpen(false)}
               disabled={loading}
-              className="text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
+              className="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Discard
             </Button>
@@ -259,34 +471,18 @@ export function MailCompose() {
               <Button
                 onClick={handleSend}
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white shadow-sm transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white shadow-sm"
               >
                 {loading ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                  <div className="flex items-center">
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
                     Sending...
-                  </>
+                  </div>
                 ) : (
-                  "Send Message"
+                  <div className="flex items-center">
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Message
+                  </div>
                 )}
               </Button>
             </div>

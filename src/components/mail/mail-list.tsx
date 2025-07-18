@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { isToday, isYesterday, format } from "date-fns";
 import DOMPurify from "dompurify";
 import { Avatar } from "@radix-ui/react-avatar";
+import { SafeHtmlRenderer } from "./SafeHtmlRenderer";
 
 interface MailListProps {
   items: Mail[]; // Array of mails passed as props
@@ -22,7 +23,6 @@ export function MailList({
   onSelectMail,
   currentFolder,
 }: MailListProps) {
-  
   if (!items.length) {
     return <div className="p-8 text-center text-muted-foreground">No mail</div>;
   }
@@ -47,27 +47,18 @@ export function MailList({
     // Fallback to the entire string if no matches
     return fromString;
   }
-
-  const htmlToText = (html: string, wordLimit = 10) => {
-    // Default to 20 words
+  function getFirstNWordsFromHtml(html: string | undefined, wordCount = 15) {
     if (!html) return "";
-
-    // Remove style/script tags and their content
-    const clean = DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: [], // Remove all HTML tags
-      ALLOWED_ATTR: [], // Remove all attributes
-    });
-
-    // Replace multiple spaces/newlines with single space and trim
-    const text = clean.replace(/\s+/g, " ").trim();
-
-    // Limit to specified number of words
-    const words = text.split(/\s+/);
-    const truncated = words.slice(0, wordLimit).join(" ");
-
-    // Add ellipsis if text was truncated
-    return words.length > wordLimit ? truncated + "..." : truncated;
-  };
+    // Create a temporary element to strip HTML tags
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    const text = div.textContent || div.innerText || "";
+    // Split into words and rejoin first N
+    const words = text.trim().split(/\s+/);
+    return words.length > wordCount
+      ? words.slice(0, wordCount).join(" ") + "..."
+      : text;
+  }
 
   const generateAvatarColor = (str: string) => {
     // Hash calculation
@@ -94,18 +85,20 @@ export function MailList({
     l = Math.max(0, l - amount);
     return `hsl(${h}, ${s}%, ${l}%)`;
   }
-   const getAvatarProps = React.useMemo(() => (name: string) => {
-    const bgColor = generateAvatarColor(name);
-    const textColor = darkenHslColor(bgColor, 50);
-    return {
-      style: {
-        backgroundColor: bgColor,
-        color: textColor,
-      },
-      children: name.charAt(0).toUpperCase(),
-    };
-  }, []); // Empty dependency to ensure it's memoized
-
+  const getAvatarProps = React.useMemo(
+    () => (name: string) => {
+      const bgColor = generateAvatarColor(name);
+      const textColor = darkenHslColor(bgColor, 50);
+      return {
+        style: {
+          backgroundColor: bgColor,
+          color: textColor,
+        },
+        children: name.charAt(0).toUpperCase(),
+      };
+    },
+    []
+  ); // Empty dependency to ensure it's memoized
 
   return (
     <>
@@ -204,11 +197,7 @@ export function MailList({
                 }
               `}
                     >
-                      {item.text
-                        ? htmlToText(item.text).substring(0, 300)
-                        : item.body
-                        ? htmlToText(item.body).substring(0, 300)
-                        : "(No preview available)"}
+                      <span>{getFirstNWordsFromHtml(item.body, 15)}</span>
                     </p>
 
                     {Array.isArray(item.labels) && item.labels.length > 0 && (
@@ -238,131 +227,6 @@ export function MailList({
           })}
         </div>
       </ScrollArea>
-
-      {/* <ScrollArea className="h-[calc(100vh-64px)]">
-        <div className="min-w-[800px]">
-          <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-sm font-medium text-gray-500 dark:text-gray-400">
-            <div className="col-span-1"></div>
-            <div className="col-span-2">Sender</div>
-            <div className="col-span-3">Subject</div>
-            <div className="col-span-4">Preview</div>
-            <div className="col-span-2 text-right">Time</div>
-          </div>
-
-          <div className="divide-y divide-gray-200 dark:divide-gray-800">
-            <div className="px-6 py-2.5 bg-gray-50/50 dark:bg-gray-900/50 sticky top-0 z-10 backdrop-blur-sm">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Front
-              </h3>
-            </div>
-
-            {items.slice(0, 2).map((item) => {
-              const senderName = extractDisplayName(item.from);
-              const avatarProps = getAvatarProps(senderName);
-              const displayName = extractDisplayName(item.from);
-
-              return (
-                <div
-                  key={item.uid}
-                  onClick={() => onSelectMail(item.uid)}
-                  className="grid grid-cols-12 gap-4 px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-900/50 cursor-pointer transition-colors duration-100"
-                >
-                  <div className="col-span-1 flex items-center">
-                    <div
-                      className={`
-              flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center 
-              shadow-sm transition-transform group-hover:scale-105
-              ${
-                !item.read
-                  ? "ring-2 ring-blue-200 dark:ring-blue-900/80"
-                  : "ring-1 ring-gray-100 dark:ring-gray-800"
-              }
-            `}
-                      style={getAvatarProps(displayName).style}
-                    >
-                      {getAvatarProps(displayName).children}
-                    </div>
-                  </div>
-                  <div className="col-span-2 flex items-center text-sm truncate">
-                    <span className="truncate">{senderName}</span>
-                  </div>
-                  <div className="col-span-3 flex items-center text-sm font-medium truncate">
-                    <span className="truncate">{item.subject}</span>
-                  </div>
-                  <div className="col-span-4 flex items-center text-sm text-gray-500 dark:text-gray-400 truncate">
-                    <span className="truncate">
-                      {item.text
-                        ? htmlToText(item.text)
-                        : item.body
-                        ? htmlToText(item.body)
-                        : ""}
-                    </span>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-end text-xs text-gray-500 dark:text-gray-400">
-                    {format(new Date(item.date), "HH:mm")}
-                  </div>
-                </div>
-              );
-            })}
-
-            <div className="px-6 py-2.5 bg-gray-50/50 dark:bg-gray-900/50 sticky top-0 z-10 backdrop-blur-sm">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                This Month
-              </h3>
-            </div>
-
-            {items.slice(2).map((item) => {
-              const senderName = extractDisplayName(item.from);
-              const avatarProps = getAvatarProps(senderName);
-              const displayName = extractDisplayName(item.from);
-              return (
-                <div
-                  key={item.uid}
-                  onClick={() => onSelectMail(item.uid)}
-                  className="grid grid-cols-12 gap-4 px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-900/50 cursor-pointer transition-colors duration-100"
-                >
-                  <div className="col-span-1 flex items-center">
-                    <div className="col-span-1 flex items-center">
-                      <div
-                        className={`
-              flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center 
-              shadow-sm transition-transform group-hover:scale-105
-              ${
-                !item.read
-                  ? "ring-2 ring-blue-200 dark:ring-blue-900/80"
-                  : "ring-1 ring-gray-100 dark:ring-gray-800"
-              }
-            `}
-                        style={getAvatarProps(displayName).style}
-                      >
-                        {getAvatarProps(displayName).children}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-span-2 flex items-center text-sm truncate">
-                    <span className="truncate">{senderName}</span>
-                  </div>
-                  <div className="col-span-3 flex items-center text-sm font-medium truncate">
-                    <span className="truncate">{item.subject}</span>
-                  </div>
-                  <div className="col-span-4 flex items-center text-sm text-gray-500 dark:text-gray-400 truncate">
-                    <span className="truncate">
-                      {item.text
-                        ? htmlToText(item.text)
-                        : item.body
-                        ? htmlToText(item.body)
-                        : ""}
-                    </span>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-end text-xs text-gray-500 dark:text-gray-400">
-                    {format(new Date(item.date), "MMM d")}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </ScrollArea> */}
     </>
   );
 }

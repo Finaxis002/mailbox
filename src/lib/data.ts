@@ -1,4 +1,19 @@
+
+export interface AttachmentMeta {
+  content: any;
+  filename: string;
+  contentType: string;
+  size: number;
+  index: number;
+}
+
 export type Mail = {
+  [x: string]: ReactNode;
+  [x: string]: any;
+  [x: string]: boolean;
+  [x: string]: boolean;
+  [x: string]: ReactNode;
+  [x: string]: any;
   to: any;
   uid: Key | null | undefined;
   from: any;
@@ -14,6 +29,7 @@ export type Mail = {
   read: boolean;
   labels: string[];
   category: "primary" | "promotions" | "social";
+  attachments: AttachmentMeta[];
 }
 
 export const mails: Mail[] = [

@@ -17,6 +17,14 @@ import {
   Info,
   TriangleAlert,
 } from "lucide-react";
+import {
+  FaFilePdf,
+  FaFileWord,
+  FaFileExcel,
+  FaFileAlt,
+  FaFileImage,
+  FaDownload,
+} from "react-icons/fa";
 
 import type { Mail } from "@/lib/data";
 import { checkEmailPriority } from "@/app/actions";
@@ -95,6 +103,18 @@ function htmlToPlainText(html: string) {
   return tmp.textContent || tmp.innerText || "";
 }
 
+function getFileIcon(mimeType: string, fileName: string) {
+  if (mimeType?.startsWith("image") || /\.(jpg|jpeg|png|gif)$/i.test(fileName))
+    return <FaFileImage className="text-blue-400" />;
+  if (/pdf$/.test(mimeType) || /\.pdf$/i.test(fileName))
+    return <FaFilePdf className="text-red-500" />;
+  if (/word|msword/.test(mimeType) || /\.(doc|docx)$/i.test(fileName))
+    return <FaFileWord className="text-blue-700" />;
+  if (/excel|spreadsheet/.test(mimeType) || /\.(xls|xlsx)$/i.test(fileName))
+    return <FaFileExcel className="text-green-700" />;
+  return <FaFileAlt className="text-gray-500" />;
+}
+
 export function MailView({ mail, currentFolder }: MailViewProps) {
   const [state, formAction] = useActionState(checkEmailPriority, initialState);
   const [showReplyModal, setShowReplyModal] = React.useState(false);
@@ -136,6 +156,12 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
 
   const userEmail = localStorage.getItem("email");
   const userPassword = localStorage.getItem("password");
+
+  if (!userEmail || !userPassword) {
+    // Show login modal, toast, or block action
+    alert("Session expired. Please login again.");
+    return;
+  }
 
   function normalizeMailboxName(folder: string) {
     if (!folder) return "INBOX";
@@ -689,6 +715,24 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
                   {mail.subject}
                 </div>
 
+                {/* --- Add Here --- */}
+                {mail.to && mail.to.length > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    <span className="font-semibold">to:</span> {mail.to}
+                  </div>
+                )}
+                {mail.cc && mail.cc.length > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    <span className="font-semibold">Cc:</span> {mail.cc}
+                  </div>
+                )}
+                {mail.bcc && mail.bcc.length > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    <span className="font-semibold">Bcc:</span> {mail.bcc}
+                  </div>
+                )}
+                {/* --- End Add --- */}
+
                 {finalReplyTo && (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1 bg-muted/30 px-1.5 py-0.5 rounded-full">
@@ -711,12 +755,64 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
 
           <Separator />
           <ScrollArea className="flex-1 whitespace-pre-wrap p-4 text-sm">
+            {mail.attachments && mail.attachments.length > 0 && (
+              <div className="mt-4">
+                <div className="font-semibold text-sm mb-2">Attachments</div>
+                <div className="flex flex-wrap gap-3">
+                  {mail.attachments.map((att, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 p-2 rounded-lg bg-blue-50 border border-blue-100 shadow transition hover:shadow-md w-full max-w-xs"
+                    >
+                      {/* Show image thumbnail or icon */}
+                      {att.contentType.startsWith("image") ? (
+                        <img
+                          src={`data:${att.contentType};base64,${att.content}`}
+                          alt={att.filename}
+                          className="h-12 w-12 rounded border object-cover bg-white"
+                        />
+                      ) : (
+                        getFileIcon(att.contentType, att.filename)
+                      )}
+                      {/* File name and size */}
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span
+                          className="truncate font-medium text-[15px] max-w-[120px]"
+                          title={att.filename}
+                        >
+                          {att.filename}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {(att.size / 1024).toFixed(1)} KB
+                        </span>
+                      </div>
+                      {/* Download button */}
+                      <a
+                        href={`https://taskbe.sharda.co.in/api/email/get-attachment?email=${encodeURIComponent(
+                          userEmail
+                        )}&password=${encodeURIComponent(userPassword)}&uid=${
+                          mail.uid
+                        }&folder=${currentFolder}&index=${att.index}`}
+                        download={att.filename}
+                        className="p-2 rounded-full hover:bg-blue-600/20 transition-colors text-blue-600"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Download"
+                      >
+                        <FaDownload className="w-5 h-5" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {mail.body ? (
               <div className="space-y-4">
                 <SafeHtmlRenderer html={mail.body} />
                 <div className="text-xs text-muted-foreground mt-4 border-t pt-2">
                   <p>Plain text version:</p>
-                  <p className="whitespace-pre-wrap">{mail.text}</p>
+                  {/* <p className="whitespace-pre-wrap">{mail.text}</p> */}
                 </div>
               </div>
             ) : (
