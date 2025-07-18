@@ -449,7 +449,7 @@ export function MailCompose() {
         </div>
 
         {/* Footer with actions */}
-        <div className="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
+        <div className="border-t mb-[10%] border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
           <div className="flex justify-between items-center">
             <Button
               variant="ghost"
