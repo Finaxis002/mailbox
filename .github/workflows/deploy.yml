@@ -19,13 +19,14 @@ jobs:
 
     - name: Copy project files to VPS
       run: |
-        rsync -az --delete -e "ssh -o StrictHostKeyChecking=no" ./ root@mailbox.sharda.co.in:/home/mailbox/
+        rsync -az --delete -e "ssh -o StrictHostKeyChecking=no" ./ root@168.231.120.171:/home/mailbox/
 
-    - name: Install dependencies and build on VPS
-      run: |
-        ssh -o StrictHostKeyChecking=no root@mailbox.sharda.co.in "
-          cd /home/mailbox &&
-          npm install &&
-          npm run build &&
-          pm2 restart all || pm2 start npm --name mailbox -- start
-        "
+    - name: Install dependencies
+      run: ssh -o StrictHostKeyChecking=no root@168.231.120.171 "cd /home/mailbox && npm install"
+
+    - name: Build project
+      run: ssh -o StrictHostKeyChecking=no root@168.231.120.171 "cd /home/mailbox && npm run build"
+
+    - name: Restart PM2
+      run: ssh -o StrictHostKeyChecking=no root@168.231.120.171 "cd /home/mailbox && pm2 restart all || pm2 start npm --name mailbox -- start"
+
