@@ -8,41 +8,49 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  
+async function handleLogin(e: { preventDefault: () => void }) {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-  async function handleLogin(e: { preventDefault: () => void }) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  try {
+    const res = await fetch("https://taskbe.sharda.co.in/api/email/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password,
+      }),
+    });
 
-    try {
-      const res = await fetch("https://taskbe.sharda.co.in/api/email/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
-      });
+    const data = await res.json();
+    setLoading(false);
 
-      const data = await res.json();
-      setLoading(false);
+    if (data.success) {
+      // SAVE credentials for fetching mails
+      localStorage.setItem("loggedIn", "yes");
+      localStorage.setItem("email", form.email);
+      localStorage.setItem("password", form.password);
+      localStorage.setItem("token", data.token);
 
-      if (data.success) {
-        // SAVE credentials for fetching mails
-        localStorage.setItem("loggedIn", "yes");
-        localStorage.setItem("email", form.email); // <-- ADD THIS
-        localStorage.setItem("password", form.password); // <-- ADD THIS
-        localStorage.setItem("token", data.token);
-
-        window.location.href = "/";
+      // Set role based on email
+      if (form.email.trim().toLowerCase() === "admin@sharda.co.in") {
+        localStorage.setItem("role", "admin");
       } else {
-        setError(data.message || "Invalid email or password");
+        localStorage.setItem("role", "user");
       }
-    } catch (err) {
-      setLoading(false);
-      setError("Server error. Please try again later.");
+
+      window.location.href = "/";
+    } else {
+      setError(data.message || "Invalid email or password");
     }
+  } catch (err) {
+    setLoading(false);
+    setError("Server error. Please try again later.");
   }
+}
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

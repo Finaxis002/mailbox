@@ -60,14 +60,7 @@ const initialState = null;
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button size="sm" type="submit" disabled={pending} variant="outline">
-      {pending ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      ) : (
-        <Sparkles className="mr-2 h-4 w-4" />
-      )}
-      Check Priority
-    </Button>
+    ""
   );
 }
 

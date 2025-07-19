@@ -100,6 +100,8 @@ export function MailList({
     []
   ); // Empty dependency to ensure it's memoized
 
+
+
   return (
     <>
       <ScrollArea className="h-[calc(100vh-64px)] rounded-lg">

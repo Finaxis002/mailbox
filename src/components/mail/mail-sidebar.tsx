@@ -61,7 +61,7 @@ export function MailSidebar({
 
   // console.log("folderCounts.inbox : ", folderCounts.inbox);
 
-  console.log("folderCounts?.inbox?.unread : ", folderCounts?.inbox?.unread)
+  console.log("folderCounts?.inbox?.unread : ", folderCounts?.inbox?.unread);
 
   return (
     <>
@@ -121,7 +121,7 @@ export function MailSidebar({
             >
               <Send className="h-4 w-4" />
               <span>Sent</span>
-               {folderCounts?.sent?.unread > 0 && (
+              {folderCounts?.sent?.unread > 0 && (
                 <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
                   {folderCounts.sent?.unread}
                 </span>

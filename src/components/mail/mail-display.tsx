@@ -37,6 +37,8 @@ export function MailDisplay({
   const [searchTerm, setSearchTerm] = React.useState("");
   const [userLetter, setUserLetter] = React.useState("U");
   const router = useRouter();
+  const userRole =
+    typeof window !== "undefined" ? localStorage.getItem("role") : null;
 
   async function markMailAsRead(uid: string, email: string, password: string) {
     const res = await fetch(
@@ -157,6 +159,9 @@ export function MailDisplay({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleLogOut}>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/admin")}>
+              Mailbox Users Management
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
