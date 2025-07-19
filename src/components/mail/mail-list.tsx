@@ -27,7 +27,7 @@ export function MailList({
     return <div className="p-8 text-center text-muted-foreground">No mail</div>;
   }
 
-  console.log("currentFolder : ", currentFolder);
+  // console.log("currentFolder : ", currentFolder);
 
   function extractDisplayName(fromString: string): string {
     // Try to match the pattern: "Display Name <email@example.com>"
@@ -122,7 +122,7 @@ export function MailList({
         `}
               >
                 {/* Unread indicator */}
-                {!item.read && currentFolder === "inbox" && (
+                {!item.read && (
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 rounded-l-lg" />
                 )}
 

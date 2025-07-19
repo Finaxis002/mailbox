@@ -10,6 +10,16 @@ import {
 } from "@/components/ui/sidebar";
 import { Mail, mails } from "@/lib/data";
 
+type Folder =
+  | "inbox"
+  | "drafts"
+  | "sent"
+  | "archived"
+  | "trash"
+  | "social"
+  | "promotions";
+type FolderCounts = Record<Folder, { total: number; unread: number }>;
+
 export default function Home() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
@@ -18,15 +28,46 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
 
-  const [folderCounts, setFolderCounts] = useState({
-    inbox: 0,
-    drafts: 0,
-    sent: 0,
-    archived: 0,
-    trash: 0,
-    social: 0,
-    promotions: 0,
+  const [folderCounts, setFolderCounts] = useState<FolderCounts>({
+    inbox: { total: 0, unread: 0 },
+    drafts: { total: 0, unread: 0 },
+    sent: { total: 0, unread: 0 },
+    archived: { total: 0, unread: 0 },
+    trash: { total: 0, unread: 0 },
+    social: { total: 0, unread: 0 },
+    promotions: { total: 0, unread: 0 },
   });
+
+  const fetchFolderCounts = async (folder: Folder) => {
+    const email = localStorage.getItem("email");
+    const password = localStorage.getItem("password");
+
+    // Fetch all mails (increase pageSize if needed for all mails)
+    const params = new URLSearchParams({
+      email: email || "",
+      password: password || "",
+      folder,
+      page: "1",
+      pageSize: "100", // Set to 100 or higher depending on expected max
+    });
+    const res = await fetch(
+      `https://taskbe.sharda.co.in/api/email/get-mails?${params.toString()}`
+    );
+    const data = await res.json();
+
+    const emails = data.emails || [];
+
+    // Count unread emails (by 'flags' or 'read')
+    const unread = emails.filter(
+      (mail: { flags: string | string[]; read: boolean }) =>
+        !mail.flags?.includes("\\Seen") && mail.read !== true // covers both
+    ).length;
+
+    return {
+      total: emails.length,
+      unread,
+    };
+  };
 
   const fetchAllCounts = async () => {
     const email = localStorage.getItem("email");
@@ -40,45 +81,23 @@ export default function Home() {
       "social",
       "promotions",
     ];
-    let newCounts: {
-      inbox: number;
-      drafts: number;
-      sent: number;
-      archived: number;
-      trash: number;
-      social: number;
-      promotions: number;
-    } = {
-      inbox: 0,
-      drafts: 0,
-      sent: 0,
-      archived: 0,
-      trash: 0,
-      social: 0,
-      promotions: 0,
+
+    let newCounts: FolderCounts = {
+      inbox: { total: 0, unread: 0 },
+      drafts: { total: 0, unread: 0 },
+      sent: { total: 0, unread: 0 },
+      archived: { total: 0, unread: 0 },
+      trash: { total: 0, unread: 0 },
+      social: { total: 0, unread: 0 },
+      promotions: { total: 0, unread: 0 },
     };
-
-    for (let folder of folderList) {
-      const params = new URLSearchParams({
-        email: email || "",
-        password: password || "",
-        folder,
-        page: "1",
-        pageSize: "1",
-      });
-      const res = await fetch(
-        `https://taskbe.sharda.co.in/api/email/get-mails?${params.toString()}`
-      );
-      const data = await res.json();
-      // TypeScript knows all keys exist now
-      newCounts[folder as keyof typeof newCounts] =
-        data.total || data.emails?.length || 0;
+    for (let folder of Object.keys(newCounts) as Folder[]) {
+      const counts = await fetchFolderCounts(folder);
+      newCounts[folder] = counts;
     }
-
-    setFolderCounts(newCounts); // ✅ No TS error now!
+    setFolderCounts(newCounts);
   };
 
-  // Call fetchAllCounts after login, after every mail action, or on an interval
   useEffect(() => {
     fetchAllCounts();
   }, []);

@@ -34,13 +34,13 @@ export function MailSidebar({
 }: {
   onFolderSelect?: (folder: string) => void;
   folderCounts: {
-    inbox: number;
-    drafts: number;
-    sent: number;
-    archived: number;
-    trash: number;
-    social: number;
-    promotions: number;
+    inbox: { total: number; unread: number };
+    drafts: { total: number; unread: number };
+    sent: { total: number; unread: number };
+    archived: { total: number; unread: number };
+    trash: { total: number; unread: number };
+    social: { total: number; unread: number };
+    promotions: { total: number; unread: number };
   };
 }) {
   const { open, setOpen, state } = useSidebar();
@@ -50,7 +50,7 @@ export function MailSidebar({
 
   // Update both local and parent state on click
   const handleFolderClick = (folder: string) => {
-    console.log("Clicked:", folder); // Debugging log to check folder value
+    // console.log("Clicked:", folder); // Debugging log to check folder value
     setSelectedFolder(folder);
 
     // Always invoke onFolderSelect to ensure parent component gets updated folder
@@ -59,7 +59,9 @@ export function MailSidebar({
     }
   };
 
-  console.log("folderCounts.inbox : ", folderCounts.inbox);
+  // console.log("folderCounts.inbox : ", folderCounts.inbox);
+
+  console.log("folderCounts?.inbox?.unread : ", folderCounts?.inbox?.unread)
 
   return (
     <>
@@ -99,9 +101,9 @@ export function MailSidebar({
             >
               <Inbox className="h-4 w-4" />
               <span>Inbox</span>
-              {folderCounts?.inbox > 0 && (
+              {folderCounts?.inbox?.unread > 0 && (
                 <span className="ml-auto bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
-                  {folderCounts.inbox}
+                  {folderCounts.inbox.unread}
                 </span>
               )}
             </SidebarMenuButton>
@@ -119,6 +121,11 @@ export function MailSidebar({
             >
               <Send className="h-4 w-4" />
               <span>Sent</span>
+               {folderCounts?.sent?.unread > 0 && (
+                <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+                  {folderCounts.sent?.unread}
+                </span>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -134,9 +141,9 @@ export function MailSidebar({
             >
               <FileText className="h-4 w-4" />
               <span>Drafts</span>
-              {folderCounts?.drafts > 0 && (
+              {folderCounts?.drafts?.unread > 0 && (
                 <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
-                  {folderCounts.drafts}
+                  {folderCounts.drafts?.unread}
                 </span>
               )}
             </SidebarMenuButton>
@@ -154,9 +161,9 @@ export function MailSidebar({
             >
               <Archive className="h-4 w-4" />
               <span>Archived</span>
-              {folderCounts?.archived > 0 && (
+              {folderCounts?.archived?.unread > 0 && (
                 <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
-                  {folderCounts.archived}
+                  {folderCounts.archived?.unread}
                 </span>
               )}
             </SidebarMenuButton>
