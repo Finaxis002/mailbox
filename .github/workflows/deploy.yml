@@ -30,3 +30,41 @@ jobs:
     - name: Restart PM2
       run: ssh -o StrictHostKeyChecking=no root@168.231.120.171 "cd /home/mailbox && pm2 restart all || pm2 start npm --name mailbox -- start"
 
+
+
+
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_DEPLOY_KEY }}
+          # port: ${{ secrets.VPS_PORT }}   # Uncomment if not using port 22
+          script: |
+            set -e  # Exit on error
+            cd /home/mailbox
+            git reset --hard HEAD
+            git clean -fd
+            git pull origin main
+            # Optional: ensure branch is correct
+            # git checkout main
+            rm -rf .next node_modules
+            npm install --production=false
+            npm run build
+            pm2 list
+            pm2 restart mailbox || pm2 start npm --name "mailbox" -- start -- -p 8124
+            pm2 save
