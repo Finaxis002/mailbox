@@ -23,7 +23,7 @@ jobs:
 
     - name: Install dependencies and build on VPS
       run: |
-        ssh -o StrictHostKeyChecking=no root@mailbox.sharda.co.in "
+        ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} << 'EOF'
           cd /home/mailbox &&
           npm install &&
           npm run build &&
