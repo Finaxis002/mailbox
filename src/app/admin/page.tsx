@@ -2,8 +2,13 @@
 import React, { useEffect, useState } from "react";
 import { MailDisplayAdmin } from "@/components/admin/MailDisplayAdmin";
 import { useRouter } from "next/navigation";
-import Select from "react-select";
+// import Select from "react-select";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import dynamic from "next/dynamic";
+
+import Select, { ActionMeta } from "react-select";
+
+type UserOption = { value: string; label: string };
 
 type User = { email: string; password: string };
 type Mail = {
@@ -18,12 +23,19 @@ type Mail = {
   cc?: string;
 };
 
+
+
 export default function AdminMailDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [folder, setFolder] = useState<"inbox" | "sent">("inbox");
   const [mails, setMails] = useState<Mail[]>([]);
   const [loading, setLoading] = useState(false);
+  const [menuPortal, setMenuPortal] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setMenuPortal(document.body as HTMLElement);
+  }, []);
 
   // Fetch user list on mount
   useEffect(() => {
@@ -160,23 +172,22 @@ export default function AdminMailDashboard() {
                 Select User Mailbox
               </label>
               <div>
-                <Select
-                  options={userOptions}
-                  value={
-                    selectedUser
-                      ? { value: selectedUser.email, label: selectedUser.email }
-                      : null
-                  }
-                  onChange={(selected) => {
-                    if (!selected) {
-                      setSelectedUser(null);
-                    } else {
-                      const user =
-                        users.find((u) => u.email === selected.value) || null;
-                      setSelectedUser(user);
-                    }
-                  }}
-                  placeholder="Select user..."
+               <Select<UserOption, false>
+  options={userOptions}
+  value={
+    selectedUser
+      ? { value: selectedUser.email, label: selectedUser.email }
+      : null
+  }
+  onChange={(selected: UserOption | null, _action: ActionMeta<UserOption>) => {
+    if (!selected) {
+      setSelectedUser(null);
+    } else {
+      const user = users.find((u) => u.email === selected.value) || null;
+      setSelectedUser(user);
+    }
+  }}
+  placeholder="Select user..."
                   className="w-full"
                   styles={{
                     control: (base) => ({
@@ -212,9 +223,8 @@ export default function AdminMailDashboard() {
                     }),
                     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                   }}
-                  menuPortalTarget={
-                    typeof window !== "undefined" ? document.body : undefined
-                  }
+                  menuPortalTarget={menuPortal}
+                  instanceId="admin-mail-user-select"
                 />
               </div>
             </div>
