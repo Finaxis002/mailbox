@@ -63,7 +63,7 @@ jobs:
             # Optional: ensure branch is correct
             # git checkout main
             rm -rf .next node_modules
-            npm install --omit=dev
+            npm install --production=false
             npm run build
             pm2 list
             pm2 restart mailbox || pm2 start npm --name "mailbox" -- start -- -p 8124
