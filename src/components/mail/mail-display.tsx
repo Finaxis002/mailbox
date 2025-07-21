@@ -133,13 +133,13 @@ export function MailDisplay({
               onFocus={(e) => e.target.select()}
             />
             {searchTerm && (
-              <button
+              <Button
                 onClick={() => setSearchTerm("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus:outline-none"
                 aria-label="Clear search"
               >
                 <Cross className="h-4 w-4" />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -159,9 +159,11 @@ export function MailDisplay({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleLogOut}>Logout</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/admin")}>
+           {userRole === 'admin' && (
+             <DropdownMenuItem onClick={() => router.push("/admin")}>
               Mailbox Users Management
             </DropdownMenuItem>
+           )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
