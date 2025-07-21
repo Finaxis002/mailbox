@@ -53,7 +53,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_DEPLOY_KEY }}
-          # port: ${{ secrets.VPS_PORT }}   
+          # port: ${{ secrets.VPS_PORT }}   //test
           script: |
             set -e  # Exit on error
             cd /home/mailbox
