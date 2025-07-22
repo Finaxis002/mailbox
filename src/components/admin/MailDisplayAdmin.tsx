@@ -66,9 +66,14 @@ type Mail = {
 type MailDisplayAdminProps = {
   mails: Mail[];
   currentFolder: string;
+  selectedUser: { email: string; password: string };
 };
 
-export function MailDisplayAdmin({ mails }: MailDisplayAdminProps) {
+export function MailDisplayAdmin({
+  mails,
+  currentFolder,
+  selectedUser,
+}: MailDisplayAdminProps) {
   const [selectedMail, setSelectedMail] = useState<Mail | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { toast } = useToast();
@@ -142,6 +147,22 @@ export function MailDisplayAdmin({ mails }: MailDisplayAdminProps) {
     return email;
   };
 
+  const userEmail = localStorage.getItem("email");
+  const userPassword = localStorage.getItem("password");
+
+  function normalizeMailboxName(folder: string) {
+    if (!folder) return "INBOX";
+    const lower = folder.toLowerCase();
+    if (lower === "inbox") return "INBOX";
+    if (lower === "sent") return "Sent";
+    if (lower === "trash" || lower === "deleted") return "Trash";
+    if (lower === "archive" || lower === "archived" || lower === "all mail")
+      return "Archive";
+    if (lower === "drafts" || lower === "draft") return "Drafts";
+    // Add more aliases as needed
+    return folder; // fallback (maybe custom folders)
+  }
+
   function getFirstNWordsFromHtml(html: string | undefined, wordCount = 15) {
     if (!html) return "";
 
@@ -195,6 +216,10 @@ export function MailDisplayAdmin({ mails }: MailDisplayAdminProps) {
     },
     []
   );
+
+  console.log("selected user : ", selectedUser);
+
+  const token = localStorage.getItem("token");
 
   return (
     <>
@@ -384,12 +409,55 @@ export function MailDisplayAdmin({ mails }: MailDisplayAdminProps) {
                               {(att.size / 1024).toFixed(1)} KB
                             </p>
                           </div>
-                          <button
+                          <a
+                            href={`https://mailbackend.sharda.co.in/api/email/admin/get-attachment?email=${encodeURIComponent(
+                              selectedUser.email
+                            )}&uid=${
+                              selectedMail?.uid
+                            }&folder=${encodeURIComponent(
+                              normalizeMailboxName(currentFolder)
+                            )}&index=${att.index}`}
+                            download={att.filename}
                             className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             title="Download"
+                            onClick={(e) => {
+                              // Prevent the default link action and make a fetch request with the token
+                              e.preventDefault();
+
+                              fetch(
+                                `https://mailbackend.sharda.co.in/api/email/admin/get-attachment?email=${encodeURIComponent(
+                                  selectedUser.email
+                                )}&uid=${
+                                  selectedMail?.uid
+                                }&folder=${encodeURIComponent(
+                                  normalizeMailboxName(currentFolder)
+                                )}&index=${att.index}`,
+                                {
+                                  method: "GET",
+                                  headers: {
+                                    Authorization: `Bearer ${token}`, // Send the token in the Authorization header
+                                  },
+                                }
+                              )
+                                .then((res) => res.blob()) // Assuming attachment is being returned as a blob
+                                .then((blob) => {
+                                  const link = document.createElement("a");
+                                  link.href = URL.createObjectURL(blob);
+                                  link.download = att.filename;
+                                  link.click();
+                                })
+                                .catch((error) => {
+                                  console.error(
+                                    "Error downloading the attachment:",
+                                    error
+                                  );
+                                });
+                            }}
                           >
                             <FaDownload className="h-4 w-4" />
-                          </button>
+                          </a>
                         </div>
                       ))}
                     </div>

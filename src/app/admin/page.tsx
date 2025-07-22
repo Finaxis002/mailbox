@@ -23,8 +23,6 @@ type Mail = {
   cc?: string;
 };
 
-
-
 export default function AdminMailDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -38,11 +36,14 @@ export default function AdminMailDashboard() {
   }, []);
 
   // Fetch user list on mount
-  useEffect(() => {
-    fetch("https://mailbackend.sharda.co.in/api/email/admin/list-email-users ")
-      .then((res) => res.json())
-      .then((data) => setUsers(data.users || []));
-  }, []);
+ useEffect(() => {
+  fetch("https://mailbackend.sharda.co.in/api/email/admin/list-email-users ")
+    .then((res) => res.json())
+    .then((data) => {
+      setUsers(data.users || []);
+      console.log("Fetched users:", data.users);
+    });
+}, []);
 
   // Fetch mails when selectedUser or folder changes
   useEffect(() => {
@@ -172,22 +173,26 @@ export default function AdminMailDashboard() {
                 Select User Mailbox
               </label>
               <div>
-               <Select<UserOption, false>
-  options={userOptions}
-  value={
-    selectedUser
-      ? { value: selectedUser.email, label: selectedUser.email }
-      : null
-  }
-  onChange={(selected: UserOption | null, _action: ActionMeta<UserOption>) => {
-    if (!selected) {
-      setSelectedUser(null);
-    } else {
-      const user = users.find((u) => u.email === selected.value) || null;
-      setSelectedUser(user);
-    }
-  }}
-  placeholder="Select user..."
+                <Select<UserOption, false>
+                  options={userOptions}
+                  value={
+                    selectedUser
+                      ? { value: selectedUser.email, label: selectedUser.email }
+                      : null
+                  }
+                  onChange={(
+                    selected: UserOption | null,
+                    _action: ActionMeta<UserOption>
+                  ) => {
+                    if (!selected) {
+                      setSelectedUser(null);
+                    } else {
+                      const user =
+                        users.find((u) => u.email === selected.value) || null;
+                      setSelectedUser(user);
+                    }
+                  }}
+                  placeholder="Select user..."
                   className="w-full"
                   styles={{
                     control: (base) => ({
@@ -269,7 +274,11 @@ export default function AdminMailDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <MailDisplayAdmin mails={mails} currentFolder={folder} />
+                  <MailDisplayAdmin
+                    mails={mails}
+                    currentFolder={folder}
+                   selectedUser={selectedUser!}
+                  />
                 )}
               </div>
             ) : (
