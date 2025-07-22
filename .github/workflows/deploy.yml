@@ -53,7 +53,8 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_DEPLOY_KEY }}
-          # port: ${{ secrets.VPS_PORT }}   //test
+          timeout: 2200           # 20 minutes (adjust as needed)
+          command_timeout: 2200   # 20 minutes (adjust as needed)
           script: |
             set -e  # Exit on error
             cd /home/mailbox
