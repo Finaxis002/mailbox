@@ -55,15 +55,16 @@ jobs:
           key: ${{ secrets.VPS_DEPLOY_KEY }}
           # port: ${{ secrets.VPS_PORT }}   //test
           script: |
-            set -e
+            set -e  # Exit on error
             cd /home/mailbox
             git reset --hard HEAD
             git clean -fd
             git pull origin main
-            # git checkout main  # uncomment if needed
+            # Optional: ensure branch is correct
+            # git checkout main
             rm -rf .next node_modules
-            npm install
+            npm install --production=false
             npm run build
             pm2 list
-            pm2 restart mailbox || PORT=5235 pm2 start npm --name "mailbox" -- start
+            pm2 restart mailbox 
             pm2 save

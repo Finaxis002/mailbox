@@ -59,9 +59,7 @@ const initialState = null;
 
 function SubmitButton() {
   const { pending } = useFormStatus();
-  return (
-    ""
-  );
+  return "";
 }
 
 // Place these functions at the top of your MailView file (or import if shared)
@@ -639,6 +637,8 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
     );
   }
 
+  const normalizedFolder = normalizeMailboxName(currentFolder);
+
   return (
     <>
       <div className="">
@@ -785,7 +785,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
                           userEmail
                         )}&password=${encodeURIComponent(userPassword)}&uid=${
                           mail.uid
-                        }&folder=${currentFolder}&index=${att.index}`}
+                        }&folder=${normalizedFolder}&index=${att.index}`}
                         download={att.filename}
                         className="p-2 rounded-full hover:bg-blue-600/20 transition-colors text-blue-600"
                         target="_blank"
