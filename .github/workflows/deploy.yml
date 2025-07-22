@@ -54,8 +54,8 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           # port: ${{ secrets.VPS_PORT }}   # Uncomment if not using port 22
-          timeout: 1200           # 20 minutes for connection
-          command_timeout: 1200   # 20 minutes for commands
+          timeout: 30m           # 20 minutes for connection
+          command_timeout: 30m   # 20 minutes for commands
           script: |
             set -e  # Exit on error
             cd /home/mailbox
