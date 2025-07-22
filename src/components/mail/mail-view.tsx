@@ -186,7 +186,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
 
     try {
       const normalizedFolder = normalizeMailboxName(currentFolder);
-      await fetch(`https://taskbe.sharda.co.in/api/email/${mail.uid}/archive`, {
+      await fetch(`https://mailbackend.sharda.co.in/api/email/${mail.uid}/archive`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -237,7 +237,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
     }
 
     try {
-      await fetch(`https://taskbe.sharda.co.in/api/email/${mail.uid}/trash`, {
+      await fetch(`https://mailbackend.sharda.co.in/api/email/${mail.uid}/trash`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -272,7 +272,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
 
   const handleSendForward = async () => {
     try {
-      await fetch("https://taskbe.sharda.co.in/api/email/send", {
+      await fetch("https://mailbackend.sharda.co.in/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -306,7 +306,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
 
   const handleSendReply = async () => {
     // Call your backend to send the mail (see below)
-    await fetch("https://taskbe.sharda.co.in/api/email/send", {
+    await fetch("https://mailbackend.sharda.co.in/api/email/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -348,7 +348,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
     try {
       const normalizedFolder = normalizeMailboxName(currentFolder);
       await fetch(
-        `https://taskbe.sharda.co.in/api/email/${mail.uid}/unarchive`,
+        `https://mailbackend.sharda.co.in/api/email/${mail.uid}/unarchive`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -375,7 +375,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
   const handleRestore = async () => {
     try {
       const normalizedFolder = normalizeMailboxName(currentFolder);
-      await fetch(`https://taskbe.sharda.co.in/api/email/${mail.uid}/restore`, {
+      await fetch(`https://mailbackend.sharda.co.in/api/email/${mail.uid}/restore`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -398,7 +398,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
   const handleDeleteForever = async () => {
     try {
       const normalizedFolder = normalizeMailboxName(currentFolder);
-      await fetch(`https://taskbe.sharda.co.in/api/email/${mail.uid}/delete`, {
+      await fetch(`https://mailbackend.sharda.co.in/api/email/${mail.uid}/delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -422,7 +422,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
     try {
       const normalizedFolder = normalizeMailboxName(currentFolder);
       // 1. Send the draft (using your send API)
-      await fetch(`https://taskbe.sharda.co.in/api/email/send`, {
+      await fetch(`https://mailbackend.sharda.co.in/api/email/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -436,7 +436,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
 
       // 2. Delete the draft from Drafts
       await fetch(
-        `https://taskbe.sharda.co.in/api/email/${mail.uid}/delete-draft`,
+        `https://mailbackend.sharda.co.in/api/email/${mail.uid}/delete-draft`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -466,7 +466,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
     try {
       const normalizedFolder = normalizeMailboxName(currentFolder);
       await fetch(
-        `https://taskbe.sharda.co.in/api/email/${mail.uid}/delete-draft`,
+        `https://mailbackend.sharda.co.in/api/email/${mail.uid}/delete-draft`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -781,7 +781,7 @@ export function MailView({ mail, currentFolder }: MailViewProps) {
                       </div>
                       {/* Download button */}
                       <a
-                        href={`https://taskbe.sharda.co.in/api/email/get-attachment?email=${encodeURIComponent(
+                        href={`https://mailbackend.sharda.co.in/api/email/get-attachment?email=${encodeURIComponent(
                           userEmail
                         )}&password=${encodeURIComponent(userPassword)}&uid=${
                           mail.uid

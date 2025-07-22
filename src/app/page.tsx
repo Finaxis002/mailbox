@@ -51,7 +51,7 @@ export default function Home() {
       pageSize: "100", // Set to 100 or higher depending on expected max
     });
     const res = await fetch(
-      `https://taskbe.sharda.co.in/api/email/get-mails?${params.toString()}`
+      `https://mailbackend.sharda.co.in/api/email/get-mails?${params.toString()}`
     );
     const data = await res.json();
 
@@ -126,7 +126,7 @@ export default function Home() {
         pageSize: "20",
       });
       const res = await fetch(
-        `https://taskbe.sharda.co.in/api/email/get-mails?${params.toString()}`
+        `https://mailbackend.sharda.co.in/api/email/get-mails?${params.toString()}`
       );
       const data = await res.json();
 

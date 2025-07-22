@@ -39,7 +39,7 @@ export default function AdminMailDashboard() {
 
   // Fetch user list on mount
   useEffect(() => {
-    fetch("https://taskbe.sharda.co.in/api/email/admin/list-email-users ")
+    fetch("https://mailbackend.sharda.co.in/api/email/admin/list-email-users ")
       .then((res) => res.json())
       .then((data) => setUsers(data.users || []));
   }, []);
@@ -50,7 +50,7 @@ export default function AdminMailDashboard() {
     setLoading(true);
     const token = localStorage.getItem("token");
     fetch(
-      `https://taskbe.sharda.co.in/api/email/admin/get-mails?email=${encodeURIComponent(
+      `https://mailbackend.sharda.co.in/api/email/admin/get-mails?email=${encodeURIComponent(
         selectedUser.email
       )}&password=${encodeURIComponent(
         selectedUser.password || ""

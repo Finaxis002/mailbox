@@ -85,7 +85,7 @@ export function MailCompose() {
     }
     setLoading(true);
     try {
-      const res = await fetch("https://taskbe.sharda.co.in/api/email/send", {
+      const res = await fetch("https://mailbackend.sharda.co.in/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -143,7 +143,7 @@ export function MailCompose() {
     setLoading(true);
     try {
       const res = await fetch(
-        "https://taskbe.sharda.co.in/api/email/save-draft",
+        "https://mailbackend.sharda.co.in/api/email/save-draft",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

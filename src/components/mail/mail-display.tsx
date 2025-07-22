@@ -41,7 +41,7 @@ export function MailDisplay({
 
   async function markMailAsRead(uid: string, email: string, password: string) {
     const res = await fetch(
-      `https://taskbe.sharda.co.in/api/email/${uid}/mark-as-read`,
+      `https://mailbackend.sharda.co.in/api/email/${uid}/mark-as-read`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -15,7 +15,7 @@ async function handleLogin(e: { preventDefault: () => void }) {
   setError("");
 
   try {
-    const res = await fetch("https://taskbe.sharda.co.in/api/email/login", {
+    const res = await fetch("https://mailbackend.sharda.co.in/api/email/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -7,7 +7,7 @@ export async function fetchMails({ email, password, folder = "INBOX", page = 1, 
     page,
     limit,
   });
-  const res = await fetch(`https://taskbe.sharda.co.in/api/email/all-mails?${params.toString()}`);
+  const res = await fetch(`https://mailbackend.sharda.co.in/api/email/all-mails?${params.toString()}`);
   if (!res.ok) {
     throw new Error("Failed to fetch mails");
   }
