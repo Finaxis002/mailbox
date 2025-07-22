@@ -65,6 +65,7 @@ type Mail = {
 
 type MailDisplayAdminProps = {
   mails: Mail[];
+  currentFolder: string;
 };
 
 export function MailDisplayAdmin({ mails }: MailDisplayAdminProps) {

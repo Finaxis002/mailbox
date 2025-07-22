@@ -54,19 +54,15 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_DEPLOY_KEY }}
           # port: ${{ secrets.VPS_PORT }}   # Uncomment if not using port 22
-          timeout: 30m           # 20 minutes for connection
-          command_timeout: 30m   # 20 minutes for commands
+          timeout: 40m           # 40 minutes for connection
+          command_timeout: 40m   # 40 minutes for commands
           script: |
             set -e  # Exit on error
             cd /home/mailbox
-            git reset --hard HEAD
-            git clean -fd
             git pull origin main
-            # Optional: ensure branch is correct
-            # git checkout main
             rm -rf .next node_modules
-            npm install --omit=dev
+            npm install
             npm run build
             pm2 list
-            pm2 restart mailbox || pm2 start npm --name "mailbox" -- start
+            pm2 restart mailbox
             pm2 save

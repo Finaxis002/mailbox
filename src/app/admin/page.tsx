@@ -269,7 +269,7 @@ export default function AdminMailDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <MailDisplayAdmin mails={mails} />
+                  <MailDisplayAdmin mails={mails} currentFolder={folder} />
                 )}
               </div>
             ) : (

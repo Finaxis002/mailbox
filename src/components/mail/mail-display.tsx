@@ -1,11 +1,10 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
-import { Cross, Search, X } from "lucide-react";
+import { Cross, Search} from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Mail } from "@/lib/data";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
